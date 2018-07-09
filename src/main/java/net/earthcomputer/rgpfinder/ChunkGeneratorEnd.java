@@ -21,9 +21,10 @@ public class ChunkGeneratorEnd
     double[] br;
     private final WorldGenEndIsland endIslands = new WorldGenEndIsland();
     
-    private int relGatewayX;
-    private int relGatewayY;
-    private int relGatewayZ;
+    public boolean hasGeneratedGateway = false;
+    public int relGatewayX;
+    public int relGatewayY;
+    public int relGatewayZ;
 
     public ChunkGeneratorEnd(long worldSeed)
     {
@@ -89,7 +90,7 @@ public class ChunkGeneratorEnd
                                 int k2 = i2 + i1 * 8;
                                 int l2 = l1 + k1 * 4;
                                 int i3 = j2 + j1 * 8;
-                                primer.setBlock(k2, l2, i3, block);
+                                primer.setBlock(x * 16 + k2, l2, z * 16 + i3, block);
                                 d15 += d16;
                             }
 
@@ -107,7 +108,7 @@ public class ChunkGeneratorEnd
         }
     }
 
-    public void buildSurfaces(World primer)
+    public void buildSurfaces(World primer, int x, int z)
     {
         for (int i = 0; i < 16; ++i)
         {
@@ -120,7 +121,7 @@ public class ChunkGeneratorEnd
 
                 for (int i1 = 127; i1 >= 0; --i1)
                 {
-                    byte iblockstate2 = primer.getBlock(i, i1, j);
+                    byte iblockstate2 = primer.getBlock(x * 16 + i, i1, z * 16 + j);
 
                     if (iblockstate2 == Blocks.AIR)
                     {
@@ -154,14 +155,15 @@ public class ChunkGeneratorEnd
         }
     }
 
-    /**
-     * Generates the chunk at the specified position, from scratch
-     */
+    public void resetSeed(int x, int z) {
+    	this.rand.setSeed((long)x * 341873128712L + (long)z * 132897987541L);
+    }
+    
     public void generateChunk(World world, int x, int z)
     {
-        this.rand.setSeed((long)x * 341873128712L + (long)z * 132897987541L);
+        resetSeed(x, z);
         this.setBlocksInChunk(x, z, world);
-        this.buildSurfaces(world);
+        this.buildSurfaces(world, x, z);
     }
 
     private float getIslandHeightValue(int p_185960_1_, int p_185960_2_, int p_185960_3_, int p_185960_4_)
@@ -345,6 +347,7 @@ public class ChunkGeneratorEnd
                     if (j2 > 0)
                     {
                         int k2 = j2 + 3 + this.rand.nextInt(7);
+                        hasGeneratedGateway = true;
                         relGatewayX = l1;
                         relGatewayY = k2;
                         relGatewayZ = i2;

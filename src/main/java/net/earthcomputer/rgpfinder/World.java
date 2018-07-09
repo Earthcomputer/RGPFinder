@@ -24,38 +24,44 @@ public class World {
 		return world;
 	}
 	
+	public World copy() {
+		World world = alloc(minX, minY, minZ, xSize, ySize, zSize);
+		for (int x = 0; x < xSize; x++)
+			for (int y = 0; y < ySize; y++)
+				for (int z = 0; z < zSize; z++)
+					world.blocks[x][y][z] = blocks[x][y][z];
+		return world;
+	}
+	
 	public void setBlock(int x, int y, int z, byte block) {
-		if (x < minX || y < minY || z < minZ || x >= minX + xSize || y >= minY + ySize || z >= minZ + zSize) {
-			int newMinX = Math.min(minX, x);
-			int newMinY = Math.min(minY, y);
-			int newMinZ = Math.min(minZ, z);
-			int newXSize = Math.max(xSize, x - minX + 1);
-			int newYSize = Math.max(ySize, y - minY + 1);
-			int newZSize = Math.max(zSize, z - minZ + 1);
-			byte[][][] newBlocks = new byte[newXSize][newYSize][newZSize];
-			for (int dx = minX; dx < minX + xSize; dx++) {
-				for (int dy = minY; dy < minY + ySize; dy++) {
-					for (int dz = minZ; dz < minZ + zSize; dz++) {
-						newBlocks[dx - minX + newMinX][dy - minY + newMinY][dz - minZ + newMinZ] = blocks[x][y][z];
-					}
-				}
-			}
-			minX = newMinX;
-			minY = newMinY;
-			minZ = newMinZ;
-			xSize = newXSize;
-			ySize = newYSize;
-			zSize = newZSize;
-			blocks = newBlocks;
-		}
+		checkBounds(x, y, z);
 		blocks[x - minX][y - minY][z - minZ] = block;
 	}
 	
 	public byte getBlock(int x, int y, int z) {
-		if (x < minX || y < minY || z < minZ || x >= minX + xSize || y >= minY + ySize || z >= minZ + zSize) {
-			return Blocks.AIR;
-		}
+		checkBounds(x, y, z);
 		return blocks[x - minX][y - minY][z - minZ];
+	}
+	
+	private void checkBounds(int x, int y, int z) {
+		if (x < minX) {
+			throw new IndexOutOfBoundsException("x = " + x + ", minX = " + minX);
+		}
+		if (y < minY) {
+			throw new IndexOutOfBoundsException("y = " + y + ", minY = " + minY);
+		}
+		if (z < minZ) {
+			throw new IndexOutOfBoundsException("z = " + z + ", minZ = " + minZ);
+		}
+		if (x >= minX + xSize) {
+			throw new IndexOutOfBoundsException("x = " + x + ", minX = " + minX + ", xSize = " + xSize);
+		}
+		if (y >= minY + ySize) {
+			throw new IndexOutOfBoundsException("y = " + y + ", minY = " + minY + ", ySize = " + ySize);
+		}
+		if (z >= minZ + zSize) {
+			throw new IndexOutOfBoundsException("z = " + z + ", minZ = " + minZ + ", zSize = " + zSize);
+		}
 	}
 	
 	public int getHeight(int x, int z) {

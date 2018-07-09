@@ -37,6 +37,8 @@ public class RGPFinder extends JFrame {
 	private JPanel exactPosPanel;
 	private JCheckBox exactPosChckbx;
 	private long worldSeed;
+	private JTextField radiusTextField;
+	private JTextArea outputTextArea;
 
 	public static void main(String[] args) {
 		try {
@@ -166,16 +168,12 @@ public class RGPFinder extends JFrame {
 			}
 			
 			private void changed() {
-				if (worldSeedTextField.getText().isEmpty()) {
-					lblWorldSeedClarifier.setText("No World Seed");
-				} else {
-					try {
-						worldSeed = Long.parseLong(worldSeedTextField.getText());
-					} catch (NumberFormatException e) {
-						worldSeed = worldSeedTextField.getText().hashCode();
-					}
-					lblWorldSeedClarifier.setText("World Seed: " + worldSeed);
+				try {
+					worldSeed = Long.parseLong(worldSeedTextField.getText());
+				} catch (NumberFormatException e) {
+					worldSeed = worldSeedTextField.getText().hashCode();
 				}
+				lblWorldSeedClarifier.setText("World Seed: " + worldSeed);
 			}
 		});
 		
@@ -184,23 +182,8 @@ public class RGPFinder extends JFrame {
 		flowLayout_4.setAlignment(FlowLayout.LEFT);
 		panel_5.add(panel_6);
 		
-		lblWorldSeedClarifier = new JLabel("No World Seed");
+		lblWorldSeedClarifier = new JLabel("World Seed: 0");
 		panel_6.add(lblWorldSeedClarifier);
-		
-		JPanel panel_9 = new JPanel();
-		FlowLayout flowLayout_5 = (FlowLayout) panel_9.getLayout();
-		flowLayout_5.setAlignment(FlowLayout.LEFT);
-		panel_5.add(panel_9);
-		
-		JPanel panel_7 = new JPanel();
-		panel_9.add(panel_7);
-		panel_7.setLayout(new BoxLayout(panel_7, BoxLayout.Y_AXIS));
-		
-		JLabel lblWorldSeedIs = new JLabel("World seed is not necessary when");
-		panel_7.add(lblWorldSeedIs);
-		
-		JLabel lblNewLabel = new JLabel("the whole chunk is made of end stone");
-		panel_7.add(lblNewLabel);
 		
 		JPanel panel_8 = new JPanel();
 		FlowLayout flowLayout_6 = (FlowLayout) panel_8.getLayout();
@@ -208,7 +191,81 @@ public class RGPFinder extends JFrame {
 		panel.add(panel_8);
 		
 		JButton btnSearch = new JButton("Search");
+		btnSearch.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				int portalX, portalZ, maxRadius;
+				try {
+					portalX = Integer.parseInt(xTextField.getText());
+					portalZ = Integer.parseInt(zTextField.getText());
+					maxRadius = Integer.parseInt(radiusTextField.getText());
+				} catch (NumberFormatException e) {
+					return;
+				}
+				
+				boolean exact = exactPosChckbx.isSelected();
+				int exactX, exactZ;
+				if (exact) {
+					try {
+						exactX = Integer.parseInt(exactXTextField.getText());
+						exactZ = Integer.parseInt(exactZTextField.getText());
+					} catch (NumberFormatException e) {
+						return;
+					}
+				} else {
+					exactX = exactZ = 0;
+				}
+				
+				Thread thread = new Thread(() -> {
+					outputTextArea.setText("");
+					
+					World portalArea = World.alloc(portalX * 16, 0, portalZ * 16, 32, 256, 32);
+					ChunkGeneratorEnd chunkGen = new ChunkGeneratorEnd(worldSeed);
+					chunkGen.generateChunk(portalArea, portalX, portalZ);
+					chunkGen.generateChunk(portalArea, portalX + 1, portalZ);
+					chunkGen.generateChunk(portalArea, portalX, portalZ + 1);
+					chunkGen.generateChunk(portalArea, portalX + 1, portalZ + 1);
+					
+					for (int r = 0; r < maxRadius; r++) {
+						for (int i = 0, e = r == 0 ? 1 : 4 * r; i < e; i++) {
+							int loadX, loadZ;
+							if (i <= r * 2) {
+								loadX = portalX - r + i;
+								loadZ = portalZ - (r - Math.abs(portalX - loadX));
+							} else {
+								loadX = portalX + r - (i - r * 2);
+								loadZ = portalX + (r - Math.abs(portalX - loadX));
+							}
+							chunkGen.resetSeed(loadX, loadZ);
+							chunkGen.hasGeneratedGateway = false;
+							chunkGen.populate(portalArea.copy(), portalX, portalZ);
+							if (chunkGen.hasGeneratedGateway) {
+								if (!exact || (exactX == chunkGen.relGatewayX && exactZ == chunkGen.relGatewayZ)) {
+									String result = "(" + loadX + ", " + loadZ + ")";
+									result += " -> (" + chunkGen.relGatewayX + ", " + chunkGen.relGatewayY + ", " + chunkGen.relGatewayZ + ")";
+									outputTextArea.append(result + "\n");
+								}
+							} else {
+								outputTextArea.append("Failed at: (" + loadX + ", " + loadZ + ")\n");
+							}
+						}
+					}
+				});
+				thread.setDaemon(true);
+				thread.start();
+			}
+		});
 		panel_8.add(btnSearch);
+		
+		JLabel lblRadius = new JLabel("Radius");
+		panel_8.add(lblRadius);
+		
+		radiusTextField = new JTextField();
+		radiusTextField.setText("100");
+		panel_8.add(radiusTextField);
+		radiusTextField.setColumns(5);
+		
+		JLabel lblChunks = new JLabel("chunks");
+		panel_8.add(lblChunks);
 		
 		JPanel panel_1 = new JPanel();
 		splitPane.setRightComponent(panel_1);
@@ -217,7 +274,7 @@ public class RGPFinder extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		panel_1.add(scrollPane);
 		
-		JTextArea outputTextArea = new JTextArea();
+		outputTextArea = new JTextArea();
 		scrollPane.setViewportView(outputTextArea);
 	}
 	
