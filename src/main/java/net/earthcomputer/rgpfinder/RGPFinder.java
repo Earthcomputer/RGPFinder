@@ -36,7 +36,7 @@ public class RGPFinder extends JFrame {
 	private JTextField exactZTextField;
 	private JPanel exactPosPanel;
 	private JCheckBox exactPosChckbx;
-	private long worldSeed;
+	private long worldSeed = 1563854987194673247L;
 	private JTextField radiusTextField;
 	private JTextArea outputTextArea;
 
@@ -244,8 +244,6 @@ public class RGPFinder extends JFrame {
 									result += " -> (" + chunkGen.relGatewayX + ", " + chunkGen.relGatewayY + ", " + chunkGen.relGatewayZ + ")";
 									outputTextArea.append(result + "\n");
 								}
-							} else {
-								outputTextArea.append("Failed at: (" + loadX + ", " + loadZ + ")\n");
 							}
 						}
 					}
@@ -275,6 +273,7 @@ public class RGPFinder extends JFrame {
 		panel_1.add(scrollPane);
 		
 		outputTextArea = new JTextArea();
+		outputTextArea.setEditable(false);
 		scrollPane.setViewportView(outputTextArea);
 	}
 	

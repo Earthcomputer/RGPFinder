@@ -17,9 +17,9 @@ public class BlockChorusFlower {
 	private static final int[] Z_OFF = { -1, 0, 1, 0, 0, 0 };
 
 	private static boolean areAllNeighborsEmpty(World worldIn, int x, int y, int z, int excludingSide) {
-		for (int enumfacing : HOR_FACING) {
-			if (enumfacing != excludingSide && worldIn.getBlock(x + X_OFF[enumfacing], y + Y_OFF[enumfacing],
-					z + Z_OFF[enumfacing]) != Blocks.AIR) {
+		for (int side : HOR_FACING) {
+			if (side != excludingSide && worldIn.getBlock(x + X_OFF[side], y + Y_OFF[side],
+					z + Z_OFF[side]) != Blocks.AIR) {
 				return false;
 			}
 		}
@@ -27,55 +27,56 @@ public class BlockChorusFlower {
 		return true;
 	}
 
-	public static void generatePlant(World worldIn, int x, int y, int z, Random rand, int p_185603_3_) {
-		worldIn.setBlock(x, y, z, Blocks.CHORUS_PLANT);
-		growTreeRecursive(worldIn, x, y, z, rand, x, y, z, p_185603_3_, 0);
+	public static void generatePlant(World world, int x, int y, int z, Random rand, int maxRadius) {
+		world.setBlock(x, y, z, Blocks.CHORUS_PLANT);
+		growTreeRecursive(world, x, y, z, rand, x, y, z, maxRadius, 0);
 	}
 
-	private static void growTreeRecursive(World worldIn, int p_185601_1_x, int p_185601_1_y, int p_185601_1_z,
-			Random rand, int p_185601_3_x, int p_185601_3_y, int p_185601_3_z, int p_185601_4_, int p_185601_5_) {
-		int i = rand.nextInt(4) + 1;
+	private static void growTreeRecursive(World world, int branchX, int branchY, int branchZ, Random rand, int baseX,
+			int baseY, int baseZ, int maxRadius, int depth) {
+		int branchHeight = rand.nextInt(4) + 1;
 
-		if (p_185601_5_ == 0) {
-			++i;
+		if (depth == 0) {
+			branchHeight++;
 		}
 
-		for (int j = 0; j < i; ++j) {
-			if (!areAllNeighborsEmpty(worldIn, p_185601_1_x, p_185601_1_y + j + 1, p_185601_1_z, -1)) {
+		for (int dy = 0; dy < branchHeight; dy++) {
+			if (!areAllNeighborsEmpty(world, branchX, branchY + dy + 1, branchZ, -1)) {
 				return;
 			}
 
-			worldIn.setBlock(p_185601_1_x, p_185601_1_y + j + 1, p_185601_1_z, Blocks.CHORUS_PLANT);
+			world.setBlock(branchX, branchY + dy + 1, branchZ, Blocks.CHORUS_PLANT);
 		}
 
-		boolean flag = false;
+		boolean branchedOff = false;
 
-		if (p_185601_5_ < 4) {
-			int l = rand.nextInt(4);
+		if (depth < 4) {
+			int numBranches = rand.nextInt(4);
 
-			if (p_185601_5_ == 0) {
-				++l;
+			if (depth == 0) {
+				numBranches++;
 			}
 
-			for (int k = 0; k < l; ++k) {
-				int enumfacing = HOR_FACING[rand.nextInt(4)];
-				int x1 = p_185601_1_x + X_OFF[enumfacing];
-				int y1 = p_185601_1_y + i;
-				int z1 = p_185601_1_z + Z_OFF[enumfacing];
+			for (int i = 0; i < numBranches; i++) {
+				int branchSide = HOR_FACING[rand.nextInt(4)];
+				int nextBranchX = branchX + X_OFF[branchSide];
+				int nextBranchY = branchY + branchHeight;
+				int nextBranchZ = branchZ + Z_OFF[branchSide];
 
-				if (Math.abs(x1 - p_185601_3_x) < p_185601_4_ && Math.abs(x1 - p_185601_3_z) < p_185601_4_
-						&& worldIn.getBlock(x1, y1, z1) == Blocks.AIR && worldIn.getBlock(x1, y1 - 1, z1) == Blocks.AIR
-						&& areAllNeighborsEmpty(worldIn, x1, y1, z1, OPPOSITES[enumfacing])) {
-					flag = true;
-					worldIn.setBlock(x1, y1, x1, Blocks.CHORUS_PLANT);
-					growTreeRecursive(worldIn, x1, y1, z1, rand, p_185601_3_x, p_185601_3_y, p_185601_3_z, p_185601_4_,
-							p_185601_5_ + 1);
+				if (Math.abs(nextBranchX - baseX) < maxRadius && Math.abs(nextBranchZ - baseZ) < maxRadius
+						&& world.getBlock(nextBranchX, nextBranchY, nextBranchZ) == Blocks.AIR
+						&& world.getBlock(nextBranchX, nextBranchY - 1, nextBranchZ) == Blocks.AIR
+						&& areAllNeighborsEmpty(world, nextBranchX, nextBranchY, nextBranchZ, OPPOSITES[branchSide])) {
+					branchedOff = true;
+					world.setBlock(nextBranchX, nextBranchY, nextBranchZ, Blocks.CHORUS_PLANT);
+					growTreeRecursive(world, nextBranchX, nextBranchY, nextBranchZ, rand, baseX, baseY, baseZ,
+							maxRadius, depth + 1);
 				}
 			}
 		}
 
-		if (!flag) {
-			worldIn.setBlock(p_185601_1_x, p_185601_1_y + i, p_185601_1_z, Blocks.CHORUS_FLOWER);
+		if (!branchedOff) {
+			world.setBlock(branchX, branchY + branchHeight, branchZ, Blocks.CHORUS_FLOWER);
 		}
 	}
 }

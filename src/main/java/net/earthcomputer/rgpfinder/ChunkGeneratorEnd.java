@@ -156,7 +156,7 @@ public class ChunkGeneratorEnd
     }
 
     public void resetSeed(int x, int z) {
-    	this.rand.setSeed((long)x * 341873128712L + (long)z * 132897987541L);
+    	this.rand.setSeed(x * 341873128712L + z * 132897987541L);
     }
     
     public void generateChunk(World world, int x, int z)
@@ -166,10 +166,10 @@ public class ChunkGeneratorEnd
         this.buildSurfaces(world, x, z);
     }
 
-    private float getIslandHeightValue(int p_185960_1_, int p_185960_2_, int p_185960_3_, int p_185960_4_)
+    private float getIslandHeightValue(int chunkX, int chunkZ, int xoff, int zoff)
     {
-        float f = (float)(p_185960_1_ * 2 + p_185960_3_);
-        float f1 = (float)(p_185960_2_ * 2 + p_185960_4_);
+        float f = chunkX * 2 + xoff;
+        float f1 = chunkZ * 2 + zoff;
         float f2 = 100.0F - MathHelper.sqrt(f * f + f1 * f1) * 8.0F;
 
         if (f2 > 80.0F)
@@ -186,14 +186,14 @@ public class ChunkGeneratorEnd
         {
             for (int j = -12; j <= 12; ++j)
             {
-                long k = (long)(p_185960_1_ + i);
-                long l = (long)(p_185960_2_ + j);
+                long k = chunkX + i;
+                long l = chunkZ + j;
 
-                if (k * k + l * l > 4096L && this.islandNoise.getValue((double)k, (double)l) < -0.8999999761581421D)
+                if (k * k + l * l > 4096L && this.islandNoise.getValue(k, l) < -0.8999999761581421D)
                 {
-                    float f3 = (MathHelper.abs((float)k) * 3439.0F + MathHelper.abs((float)l) * 147.0F) % 13.0F + 9.0F;
-                    f = (float)(p_185960_3_ - i * 2);
-                    f1 = (float)(p_185960_4_ - j * 2);
+                    float f3 = (MathHelper.abs(k) * 3439.0F + MathHelper.abs(l) * 147.0F) % 13.0F + 9.0F;
+                    f = xoff - i * 2;
+                    f1 = zoff - j * 2;
                     float f4 = 100.0F - MathHelper.sqrt(f * f + f1 * f1) * f3;
 
                     if (f4 > 80.0F)
@@ -266,12 +266,12 @@ public class ChunkGeneratorEnd
                     }
 
                     d4 = d4 - 8.0D;
-                    d4 = d4 + (double)f;
+                    d4 = d4 + f;
                     int k1 = 2;
 
                     if (j1 > p_185963_6_ / 2 - k1)
                     {
-                        double d6 = (double)((float)(j1 - (p_185963_6_ / 2 - k1)) / 64.0F);
+                        double d6 = (j1 - (p_185963_6_ / 2 - k1)) / 64.0F;
                         d6 = MathHelper.clamp(d6, 0.0D, 1.0D);
                         d4 = d4 * (1.0D - d6) + -3000.0D * d6;
                     }
@@ -280,7 +280,7 @@ public class ChunkGeneratorEnd
 
                     if (j1 < k1)
                     {
-                        double d7 = (double)((float)(k1 - j1) / ((float)k1 - 1.0F));
+                        double d7 = (k1 - j1) / (k1 - 1.0F);
                         d4 = d4 * (1.0D - d7) + -30.0D * d7;
                     }
 
@@ -317,7 +317,8 @@ public class ChunkGeneratorEnd
                 }
             }
 
-            if (this.getIslandHeightValue(x, z, 1, 1) > 40.0F)
+            float islandHeight = getIslandHeightValue(x, z, 1, 1);
+            if (islandHeight > 40.0F)
             {
                 int j = this.rand.nextInt(5);
 
